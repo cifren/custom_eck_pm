@@ -1,0 +1,9 @@
+name = Custom menu eck pm
+description = Create custom eck pm
+core = 7.x
+package = ECK
+
+dependencies[] = ctools
+dependencies[] = page_manager
+dependencies[] = eck
+dependencies[] = eck_pm

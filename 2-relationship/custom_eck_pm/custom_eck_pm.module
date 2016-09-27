@@ -1,0 +1,59 @@
+<?php
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function custom_eck_pm_ctools_plugin_directory($owner, $plugin_type) {
+  $plugins = array(
+    'ctools' => array('contexts', 'relationships')
+  );
+
+  if (isset($plugins[$owner]) && in_array($plugin_type, $plugins[$owner])) {
+    return 'plugins/' . $plugin_type;
+  }
+}
+
+function custom_eck_pm_menu() {
+  $base = array(
+    'access arguments' => array('access content'),
+    'type' => MENU_CALLBACK,
+  );
+  $items['custom_eck_pm/autocomplete/%'] = array(
+    'page callback' => 'custom_eck_pm_content_autocomplete_entity',
+    'page arguments' => array(2),
+  ) + $base;
+  
+  return $items;
+}
+
+/**
+ * Helper function for autocompletion of entity titles.
+ */
+function custom_eck_pm_content_autocomplete_entity($entity_type, $string = '') {
+  if ($string != '') {
+    $entity_info = entity_get_info($entity_type);
+
+    if (!module_exists('entity')) {
+      module_load_include('inc', 'ctools', 'includes/entity-access');
+      _ctools_entity_access($entity_info, $entity_type);
+    }
+    
+    $matches = array();
+    // If an ID match was found, use that ID rather than the whole string.
+    if (is_numeric($string)) {
+      $entity_id = $string;
+      $results = entity_load($entity_type, array(1));
+    
+      foreach ($results as $entity_id => $eck) {
+        $label = isset($entity_info['entity keys']['label'])?$entity_info['entity keys']['label']:null;
+        $entity_id = $eck->id;
+        $bundle = $eck->type;
+        
+        $matches[$label . " [id: $entity_id]"] = '<span class="autocomplete_title">' . check_plain($label) . '</span>';
+        $matches[$label . " [id: $entity_id]"] .= isset($bundle) ? ' <span class="autocomplete_bundle">(' . check_plain($bundle) . ')</span>' : '';
+      }
+    }
+
+    drupal_json_output($matches);
+  }
+}
